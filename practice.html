@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Typing Practice - Practice</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0 auto; width: 600px; }
+        #keyboard { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; margin-top: 20px; }
+        .key { border: 1px solid #000; padding: 10px; text-align: center; user-select: none; }
+        .key.pressed { background-color: #ccc; }
+        #practiceText { margin-top: 20px; font-size: 20px; line-height: 1.5; }
+        .correct { color: blue; }
+        .incorrect { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Typing Practice</h1>
+    <div id="keyboard"></div>
+    <div id="practiceText"></div>
+    <div id="conclusion" style="margin-top:20px;"></div>
+
+    <script>
+        var startTime = new Date();
+        var totalErrors = 0;
+
+        var practiceText = sessionStorage.getItem('practiceText');
+        var practiceIndex = 0;
+        var errors = [];
+
+        var keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,:?/\\-_+=<>\'\"!@#$%^&*(){}[]'.split('');
+        var keyboard = document.getElementById('keyboard');
+        keys.forEach(function(key) {
+            var keyElement = document.createElement('div');
+            keyElement.textContent = key;
+            keyElement.classList.add('key');
+            keyboard.appendChild(keyElement);
+        });
+
+        function updatePracticeText() {
+            var practiceTextElement = document.getElementById('practiceText');
+            practiceTextElement.innerHTML = '';
+            for (var i = 0; i < practiceText.length; i++) {
+                var charElement = document.createElement('span');
+                charElement.textContent = practiceText[i];
+                if (errors.includes(i)) {
+                    charElement.classList.add('incorrect');
+                } else if (i < practiceIndex) {
+                    charElement.classList.add('correct');
+                }
+                practiceTextElement.appendChild(charElement);
+            }
+        }
+
+        function calculateTypingSpeed() {
+            var endTime = new Date();
+            var timeDiff = endTime - startTime; 
+            timeDiff /= 1000; // convert to seconds
+            var charactersPerSecond = practiceIndex / timeDiff; 
+            var wordsPerMinute = (charactersPerSecond * 60) / 5; 
+            return Math.round(wordsPerMinute);
+        }
+
+        function calculateCorrectRate() {
+            var totalTyped = errors.length + practiceIndex;
+            var correctTyped = totalTyped - totalErrors;
+            var correctRate = correctTyped / totalTyped * 100;
+            return Math.round(correctRate);
+        }
+
+        function showConclusion() {
+            var conclusionElement = document.getElementById('conclusion');
+            conclusionElement.textContent = `Typing Speed: ${calculateTypingSpeed()} WPM. Correct Rate: ${calculateCorrectRate()}%.`;
+        }
+
+        updatePracticeText();
+
+        window.addEventListener('keydown', function(e) {
+            var key = e.key.toUpperCase();
+            var keyElement = [...document.querySelectorAll('.key')].find(function(element) {
+                return element.textContent === key;
+            });
+            if (keyElement) {
+                keyElement.classList.add('pressed');
+            }
+
+            var expectedKey = practiceText[practiceIndex].toUpperCase();
+            if (key === expectedKey) {
+                practiceIndex++;
+                if (errors.includes(practiceIndex)) {
+                    var index = errors.indexOf(practiceIndex);
+                    if (index > -1) {
+                        errors.splice(index, 1);
+                    }
+                }
+                updatePracticeText();
+            } else {
+                if (!errors.includes(practiceIndex)) {
+                    errors.push(practiceIndex);
+                    totalErrors++;
+                }
+                updatePracticeText();
+            }
+
+            if (practiceIndex === practiceText.length) {
+                showConclusion();
+            }
+        });
+
+        window.addEventListener('keyup', function(e) {
+            var key = e.key.toUpperCase();
+            var keyElement = [...document.querySelectorAll('.key')].find(function(element) {
+                return element.textContent === key;
+            });
+            if (keyElement) {
+                keyElement.classList.remove('pressed');
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
